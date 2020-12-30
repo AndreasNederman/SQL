@@ -1,0 +1,45 @@
+create table dbo.blob
+(
+	ProductID		int,
+	Color			varchar(20),
+	Names			varchar(20),
+	SellStartDate	int,
+	ProductNumber	varchar(20),
+	ReorderPoint	int
+);
+
+CREATE MASTER KEY
+ENCRYPTION BY PASSWORD ='RANDOMSTUFF';
+
+CREATE DATABASE SCOPED CREDENTIAL [https://dfnedermanstdsa.blob.core.windows.net/polybase/]
+WITH IDENTITY = 'SHARED ACCESS SIGNATURE',
+SECRET ='XXXXXXXXXXX'
+
+CREATE EXTERNAL DATA SOURCE dataset1
+WITH
+(
+	TYPE = BLOB_STORAGE,
+	LOCATION = 'https://dfnedermanstdsa.blob.core.windows.net',
+	CREDENTIAL = [https://dfnedermanstdsa.blob.core.windows.net/]
+);
+
+
+
+
+SELECT * FROM OPENROWSET
+(
+   BULK  'data.csv',
+   DATA_SOURCE = 'dataset1',
+   SINGLE_CLOB) AS DataFile;
+
+ 
+ BULK INSERT dbo.blob
+        FROM 'data.csv'
+       WITH
+       (
+	DATA_SOURCE = 'dataset1',
+    FIRSTROW = 2,
+    FIELDTERMINATOR = ',',  --CSV field delimiter
+    ROWTERMINATOR = '\n',   --Use to shift the control to next row
+    TABLOCK
+       );
